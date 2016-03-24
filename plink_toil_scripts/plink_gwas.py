@@ -123,7 +123,7 @@ def start_pipeline(job, input_args):
 
 def call_impute2(job, data): 
     """
-    NEED TO FIGURE OUT HOW TO MAKE A CALL TO INPUTE2
+    NEED TO BUILD DOCKER AND MAKE A CALL TO IMPUTE2
 
     IMPUTE2 output to VCF conversion: 
         https://www.biostars.org/p/153728/
