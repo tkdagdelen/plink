@@ -12,7 +12,7 @@ This pipeline is intended for use with PLINK2 (1.9)
 
  		0 --> 1 --> 2 --> 3 --> 4
 
- 0  Imputation ? (might move this out into its own script later)
+ 0  Imputation (still need to implement this)
  1  VCF-->PED/MAP conversion
  2  MAF and Missingness Filtering
  3  Clustering/Stratification
