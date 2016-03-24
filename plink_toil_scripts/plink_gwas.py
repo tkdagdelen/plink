@@ -12,15 +12,11 @@ This pipeline is intended for use with PLINK2 (1.9)
 
  		0 --> 1 --> 2 --> 3 --> 4
 
- 0	Imputation ? (might move this out into its own script later)
- 1	VCF-->PED/MAP conversion
- 2 	MAF and Missingness Filtering
+ 0  Imputation ? (might move this out into its own script later)
+ 1  VCF-->PED/MAP conversion
+ 2  MAF and Missingness Filtering
  3  Clustering/Stratification
- 4	Association Analysis (including covariates) & Results Correction (bonferroni)
-
-Flags: 
-- no flags. Instead, put input parameters into the GWAS_parameters_template, save under a new filename, and put the path to that file
-    in the command line call 
+ 4  Association Analysis (including covariates) & Results Correction (bonferroni)
 
 Dependencies: 
 Docker  -   apt-get install docker.io
@@ -180,7 +176,7 @@ def VCF_to_PEDMAP(job, VCFfilename, min_qual, min_gq, min_gp, output_prefix):
         For more inromation about PLINK's VCF conversion peculiarities/options: https://www.cog-genomics.org/plink2/input#vcf
        
     """
-    # Set load necessary input parameters    
+    # Load necessary input parameters    
     VCF_filename = input_args['vcf_filename']
     min_qual_threshold = input_args['quality']
     min_gq_score = input_args['min_gp_score']
@@ -221,7 +217,7 @@ def apply_filters(job, MapPed_filename, MAF_cutoff, percent_SNPs_missing_cutoff,
     Equivalent PLINK command line arguments:
 
         >> plink --bfile [input_filename] --maf [mafthresh] --mind [SNPmiss] --geno [genoRate] --out [output_filename]
-
+                     0                       1                  2                3                4     
 
     Operations performed (see equiv. command line argument above): 
         0   Loads the binary MAP/PED/etc. PLINK files with the filename [input_filename]
@@ -455,12 +451,15 @@ def regress(job, MapPed_filename, IBS_clusters_filename, covariates_filename, co
         reg = "--logistic"
 
     # Put together PLINK arguments
->>plink --bfile [input_filename] --linear --within [IBS_clusterfilename] --covar [covar_file.txt] --covar-name [covar_names] --pheno [pheno_filename.txt] --pheno-name [pheno_variablename] --out [output_filename] --adjust
     PLINK_command = ['--bfile', MapPed_filename,
-               '--maf', maf_cutoff,
-               '--mind', percent_SNPs_missing_cutoff,
-               '--geno', genoRate_cutoff,
-               '--out', output_prefix]
+               '--linear',
+               '--within', clusterfiles_prefix,
+               '--covar',covariates_filename,
+               '--covar-name', covariates,
+               '--pheno', phenotypes_filename,
+               '--pheno-name', phenotype,
+               '--out', output_prefix,
+               '--adjust']
 
 
     
@@ -473,9 +472,6 @@ def regress(job, MapPed_filename, IBS_clusters_filename, covariates_filename, co
     except: 
         sys.stderr.write('Running the GWAS pipeline with %s in %s failed.' %(" ".join(PLINK_command), work_dir))
         raise
-
-    # Link to the next job in the pipeline
-    job.addFollowOnJobFn(IBS_cluster, input_args)
 
 def main():
     """
