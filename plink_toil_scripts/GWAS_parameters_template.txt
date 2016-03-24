@@ -1,0 +1,63 @@
+############################### GWAS Parameter Template: #######################################
+
+Input desired parameters to use when running the analysis into the given fields of this template, after the colons. 
+		
+		ex. <parameter>: 2
+
+String parameters given must not inlude spaces (underscores can be used instead)
+
+Do not change the parameter field names or the parser will fail
+
+Save this file to a different name when finished.
+
+###################################### Parameters #############################################
+
+VCF to MAP/PED conversion
+
+	<VCF_filename (string, ex. myVCF.vcf)>: 
+
+	<Minimum genotype quality threshold (float, default is )>: 
+
+	<Minimum gp_score threshold (float, default is )>: 
+
+	<Minimum gq_score threshold (float, default is )>: 
+
+	<Desired prefix for original PED/MAP files (string, ex. SUPRESS_trial_data)>:
+
+Filtering
+
+	<Minor Allele Frequency filter MAFcutoff (float, default is )>: 
+
+	<Cutoff for percentage of samples missing for a given SNP (float, default is )>:
+
+	<Cutoff for percentage of SNPs missing for a given sample (float, default is )>:
+
+	<Desired prefix for post-filter PED/MAP files (string, ex. SUPRESS_trial_data_filtered)>: 
+
+Clustering
+
+	<Desired prefix for the file containing non-clustered IBS pairs (*.genome) (string, ex. SUPRESS_trial_data_filtered)>:
+
+	<Number of clusters to sort IBS pairs into (float, ex. 3)>:
+
+	<Desired prefix for file containing final IBS clusters (string, ex. SUPRESS_clusters)>:
+
+Association
+
+	<Type of analysis to run (linear or logistic) (ex. linear)>:
+
+	<Name of covariate file (string, ex. covar.txt)>: 
+
+	<Comma separated list of covariates to include from covariate file (string, ex. BMI,AGE,Treatment_Arm)>:
+
+	<Name of phenotype file contianing phenotype(s) to regress on (string, ex. pheno.txt)>
+
+	<Name of phenotype variable from phenotype file to regress (string, ex. 10yr_survival)>:
+
+	<Desired prefix for final association .assoc.linear/logistic and .adjust output files (string, ex. SUPRESS_results)>: 
+
+
+	
+
+
+
