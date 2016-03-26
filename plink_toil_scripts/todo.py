@@ -2,12 +2,14 @@ TODO:
     now: 
 
     # - Build parser (and type checking)
-    - write the toil functionality
+    # - write the toil functionality
+    - clean up the code
     - write ReadMe
     - fix docker for PLINK2
-    - put descriptions into the function descriptions
-    - send put on GitHub
-    - imputation???
+    - put descriptions into the function descriptions?
+    # - put on GitHub
+    - write docker image for IMPUTE2
+    - write script to convert IMPUTE2 results to VCF
 
 
     General:

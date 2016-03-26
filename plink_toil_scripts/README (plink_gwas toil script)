@@ -1,0 +1,223 @@
+README (plink_gwas toil script)
+
+This is a script that uses Toil and Docker to run an IMPUTE2/PLINK GWAS workflow on genotype and phenotype data from the command line.
+
+Contents of this readme: 
+- Overview of the Workflow
+- Workflow Breakdown
+- Module and Package Requirements
+- How to Run
+- Parameters
+- Workflow Breakdown
+	- Imputation using IMPUTE2
+	- VCF to PED/MAP Conversion
+	- MAF and Missingness Filtering
+	- IBS Clustering
+	- Regression
+- Troubleshooting
+
+
+----- Workflow Overview -----
+
+	All jobs in the workflow are run in series, with each step starting once the previous step finishes. As it stands, no job can be skipped/omitted and all parameters (see Parameters section of this README)must be given in the command line call.  
+
+	 		0 --> 1 --> 2 --> 3 --> 4
+
+	 0  Imputation using IMPUTE2
+	 1  VCF-->PED/MAP conversion using PLINK's file conversion functions
+	 2  MAF and Missingness Filtering using PLINK
+	 3  Identity-by-State Clustering to correct for population stratification using PLINK
+	 4  Association Analysis (including covariates and IBS clusters) & Results Correction (bonferroni) 
+----- Workflow Breakdown -----
+	
+	--- Imputation using IMPUTE2 ---
+	--- VCF to PED/MAP Conversion ---
+
+		Uses PLINK's built-in function to read VCF and write to PED/MAP files. 
+	         
+        Equivalent PLINK command line arguments: 
+
+            >> plink --vcf [VCF_filename] --id-idspace-to _ --vcf-min-qual [min_qual_threshold] --vcf-require-gt --missing-genotype - --vcf-min-gq [min_gq_score] --vcf-min-gp [min_gp_score] --vcf-half-call missing --const-fid {"0"} --out [output_filename] 
+                        0                   1                2                                   3                  4                     5                       6                            7                         8                9         
+        
+        Operations performed (see equiv. command line argument above): 
+            0   loads a (possibly gzipped) VCF file, extracting information which can be represented by the PLINK 1 binary format and ignoring everything else.
+            1   replaces all the spaces in the sampleIDs with "_"
+            2   filters out variants with QUAL value smaller than [val], or with no QUAL value at all.
+            3   filters out any SNPs without "GT" in the INFO column, indicating that the genotype of the sample at that site is not included in that row. (i.e. row without genotype information)
+            4   set the character to be used to denote missing genotype calls to be "-"
+            5   excludes all genotype calls with GQ below the given (nonnegative, decimal values permitted) threshold. Note: Missing GQ values are not treated as being below the threshold.
+            6   excludes all genotype calls with GP value below the given threshold, assuming GP is 0-1 scaled rather than phred-scaled.
+            7   treat half-calls ('0/.' and similar GT values) as missing.
+            8   sets the family id's to "0" and the within-family id's to the sampleIDs of the VCF file.
+            9   sets the name of the output file
+        
+        Parameters loaded from imput_args dictionary:
+                 --param--                  --type--        --description--  
+            :param job:                     Job instance
+            :param VCFfilename:             string
+            :param min_qual:                float
+            :param min_gq:                  float
+            :param min_gp:                  float
+            :param output_prefix:           string
+
+        Note: 
+            - phase and dosage information is discarded in the conversion (a consequence of PLINK's built-in conversion function) 
+            - VCF reference alleles are set to A2, even if minor (PLINK normally forces major alleles to A2 in loading step)
+            - VCFs use sample IDs, but PLINK tracks family and within-family ID's. This implementation sets family ID to '0' and just 
+                uses the VCF's sample IDs as the within-family IDs. 
+            - Also note that sample IDs cannot contain spaces. To prevent this, --id-idspace-to ["_"] is used in this implementation to convert spaces to underscores in the sampleIDs. 
+            - By default, PLINK only tracks the reference allele and the most common alternate allele found in the sample (or samples 
+                if the VCF is the product of an aggregation of samples). PLINK codes all the rest of the alternate alleles as missing calls (missing calls denoted by "-" in this implementation)
+        
+        For more information on the VCF format: http://gatkforums.broadinstitute.org/gatk/discussion/1268/what-is-a-vcf-and-how-should-i-interpret-it
+        For more inromation about PLINK's VCF conversion peculiarities/options: https://www.cog-genomics.org/plink2/input#vcf
+	--- MAF and Missingness Filtering ---
+
+		This module applies MINOR Allele Frequency and missingness filters to the data and outputs a new file. 
+
+	    Equivalent PLINK command line arguments:
+
+	        >> plink --bfile [input_filename] --maf [mafthresh] --mind [SNPmiss] --geno [genoRate] --out [output_filename]
+	                     0                       1                  2                3                4     
+
+	    Operations performed (see equiv. command line argument above): 
+	        0   Loads the binary MAP/PED/etc. PLINK files with the filename [input_filename]
+	        1   Filters out SNPs with MINOR Allele Frequency below [mafthresh].
+	        2   Filters out sampels in which the percentage of missing SNPs is greater than [SNPmiss]
+	        3   Filters out SNPs for which the genotyping rate is less than [genoRate]
+	        4   Outputs the files with the prefix [output_filename] with the filtered data.  
+
+	    Parameters:
+	             --param--                           --type--        --description-- 
+	        :param job:                              Job instance
+	    	:param MapPed_filename:                  string
+	        :param MAF_cutoff:                       float
+	        :param percent_SNPs_missing_cutoff:      float
+	        :param genoRate_cutoff:                  float
+	        :param output_prefix:                    string
+
+	    Filters:
+
+	        --maf    Filters out SNPs with MINOR Allele Frequency below the given threshold. Standard MAF threshold used in 
+	                    GWAS is MAF<1%. 
+	        --mind   Filters out sampels in which the percentage of missing SNPs is greater than missingnessThresh. Standard 
+	                    according to PLINK website is 10%, which is also the default value. 
+	        --geno   Filters out SNPs for which the genotyping rate is less than rateThresh. Standard genotyping rate cutoff according to 
+	                    PLINK website is 90%. Default is to include all SNPs. 
+
+	    Note: 
+	        - This filter step can be performed in the VCF to PED/MAP conversion step but in this implementation it is kept separate for simplicity. 
+
+	    For more information: http://pngu.mgh.harvard.edu/~purcell/plink/thresh.shtml
+	--- IBS Clustering ---
+
+		This module performs 2 primary functions: 
+	            - Computes the pairwise identity by state for all resulting samples.
+	            - Clusters Samples together based on their IBS similarity 
+
+        Equivalent PLINK command line arguments: 
+
+            If .genome file not found in current directory
+
+                >> plink --bfile [input_filename] --Z-genome --out [IBS_pairsfile_prefix]
+                            0                       1            2                  
+                >> plink --bfile [input_filename] --read-genome [output_filename].genome --cluster --K [num_clusters] --out [IBS_clusterfilename]
+                            3                        4                                      5       6                   7
+
+            If .genome file found in current directory
+
+                >> plink --bfile [input_filename] --read-genome [output_filename].genome --cluster --K [num_clusters] --out [IBS_clusterfilename]
+                            3                        4                                      5       6                   7
+
+        Operations performed (see equiv. command line argument above): 
+            0   loads the binary MAP/PED/etc. PLINK files with the filename [input_filename]
+            1   calculates the pairwise identity by state of the samples in the dataset (Note: this can take a while)
+            2   outputs a gzipped version of the pairwise IBS results as [output_filename].genome
+            3   loads the binary MAP/PED/etc. PLINK files with the filename [input_filename]
+            4   loads the (possibley g-zipped) [output_filename].genome file
+            5   calls the clustering command to group the samples based on the falgs/parameters and outputs the four output files. 
+            6   specifies the number of clusters [num_clusters] into which to group samples  
+            7   outputs the clustering results in a file named [IBS_clusterfilename]
+
+        Parameters:
+                 --param--                           --type--        --description-- 
+            :param job:                              job instance
+            :param MapPed_filename:                  string
+            :param IBS_pairs_output_filename:        string
+            :param num_clusters:                     int
+            :param clusterfile_prefix:               string  
+        
+        Note: 
+            - For speed-up, this function can be split into batches, pushed to a cluster and executed in parallel, but this implementation does not do this. 
+            - MAF filtering and missingness filtering included in this step, as it doesn't make sense to add a read/write step just for filtering.
+            - the --cluster call generates four output files:
+                 *.cluster0 - contains some information on the clustering process
+                 *.cluster1 - contains information on the final solution, listed by cluster
+                 *.cluster2 - contains the same information, but listed one line per individual
+                 *.cluster3 - in the same format as cluster2 (one line per individual) but contains all solutions (i.e. every step of the clustering
+                                from moving from N clusters each of 1 individual (leftmost column after family and individual ID) to 1 cluster (labelled 0) 
+                                containing all N individuals (the final, rightmost column).
+
+        For more information and examples of the clustering output formats: http://pngu.mgh.harvard.edu/~purcell/plink/strat.shtml
+	--- Regression ---
+
+	    Runs an association analysis (linear or logistic regression, based on the reg_type parameter given), regressing the specified phenotypes on genotype including the specified covariates
+        and taking into consideration the IBS clusters created in the previous step.
+
+       	Equivalent PLINK command line arguments: 
+            For linear regression: 
+                >>plink --bfile [input_filename] --linear --within [IBS_clusterfilename] --covar [covar_file.txt] --covar-name [covar_names] --pheno [pheno_filename.txt] --pheno-name [pheno_variablename] --out [output_filename] --adjust
+                            0                        1        2                             3                            4                      5                            6                                7                         8
+            For logistic regression: 
+                >>plink --bfile [input_filename] --logistic --within [IBS_clusterfilename] --covar [covar_file.txt] --covar-name [covar_names] --pheno [pheno_filename.txt] --pheno-name [pheno_variablename] --out [output_filename] --adjust
+                            0                        1        2                             3                            4                      5                            6                                7                         8
+        Operations performed (see equiv. command line argument above): 
+            0   loads the binary MAP/PED/etc. PLINK files with the filename [input_filename]
+            1   runs a linear or logistic regression
+            2   flag to take the IBS clustering into account (can also explicitly test for homogeneity of effect between clusters, but this is not done in this implementation)
+            3   flag to take include covariates, taking from [covar_file.txt]
+            4   flag to specify a subset of the covariates in [covar_file.txt] using [covar_names] where covar_names is a string composed of a comma separated list of covariates to include
+            5   specifies the phenotype file to be used instead of the phenotype in the column 6 of the .ped file. 
+            6   specifies the phenotype in the phenotype file to be regressed
+            7   Outputs the results into a file with the prefix [output_filename] and suffix ".assoc.linear"
+            8   flag to make an additional file with prefix [output_filename] and suffix ".adjust" that has the adjusted (bonferroni) p-value results, sorted by p-value.
+
+        Parameters:  
+                  --param--                    --type--      --description--      
+            :param MapPed_filename:             string
+            :param IBS_clusters_filename:       string      
+            :param covariates_filename:         string
+            :param covariates:                  string
+            :param phenotypes_filename:         string
+            :param phenotype:                   string
+            :param results_prefix:              string
+            :param regression_type:             string
+        
+        Note: 
+            - --linear and --logistic generate files with the extension *.assoc.linear or *.assoc.logistic respectively, the only difference being whether the regression coefficients (--linear) or odds ratios (--logistic) is reported.
+            - to include covariates, a specific covariates text file must be created (see the links below for more information)
+            - by default, plink uses whatever pheontype is in the .ped file for the regression. However, this implementation assumes that the phenotypes to be used in the regression are specified in a separate file that contains the phenotypes for each sample. 
+                - the phenotype file must be a file that contains 3 columns (one row per individual):
+                    - Family ID
+                    - Individual ID
+                    - Phenotype
+                - the phenotype file must have a header row
+                    - the first two variables must be labelled FID and IID
+                    - all subsequent variable names cannot have any whitespace in them
+            - It is possible to specify multiple phenotypes to independently regress using --mpheno, but this implementation performs only a single regression per call to regress().
+            - The original PED file must still contain a phenotype in column 6 (even if this is a dummy phenotype, e.g. all missing), unless the --no-pheno flag is given
+            - Note: for categorical covariates, a set of binary dummy variables must be created and used as the covariates
+            - CAUTION: If an individual is not present in the covariate file, or if the individual has a missing phenotype value (i.e. -9 by default) for the covariate, then that individual is set to missing (i.e. will be excluded from association analysis)
+            - if using --assoc instead of linear/logistic, and the phenotype is quantitative (i.e. contains values other than 1, 2, 0 or missing) then PLINK will automatically treat the analysis as a quantitative trait analysis
+
+        For more information: http://pngu.mgh.harvard.edu/~purcell/plink/anal.shtml
+        For more information on covariate file and flags: http://pngu.mgh.harvard.edu/~purcell/plink/data.shtml#covar
+----- Module and Package Requirements-----
+	Dependencies: 
+	Docker  -   apt-get install docker.io
+	Toil    -   pip install toil
+	PLINK   -  
+----- How to Run -----
+----- Parameters -----
+----- Troubleshotting -----

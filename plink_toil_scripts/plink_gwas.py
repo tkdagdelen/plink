@@ -37,7 +37,7 @@ PLINK   -
     parser.add_argument('-m', '--mind', required=True, help='Cutoff for percentage of samples missing for a given SNP (float, default is )')
     parser.add_argument('-g', '--geno', required=True, help='Cutoff for percentage of SNPs missing for a given sample (float, default is )')
     parser.add_argument('-ff', '--filtered_filename', required=True, help='Desired prefix for post-filter PED/MAP files (string, ex. SUPRESS_trial_data_filtered)')
-    parser.add_argument('-ibs', '--ibs_pairsfile_prefix', required=False, help='Desired prefix for the file containing non-clustered IBS pairs (*.genome) (string, ex. SUPRESS_trial_data_filtered)')
+    parser.add_argument('-ibs', '--ibs_pairsfile_prefix', required=True, help='Desired prefix for the file containing non-clustered IBS pairs (*.genome) (string, ex. SUPRESS_trial_data_filtered)')
     parser.add_argument('-n', '--num_clusters', required=True, help='Number of clusters to sort IBS pairs into (float, ex. 3)')
     parser.add_argument('-c', '--clusterfiles_prefix', required=True, help='Desired prefix for file containing final IBS clusters (string, ex. SUPRESS_clusters)')
     parser.add_argument('-u', '--sudo', dest='sudo', action='store_true', help='Docker usually needs sudo to execute '
@@ -121,7 +121,7 @@ def start_pipeline(job, input_args):
     data = job.addChildJobFn(download_from_url, url, files_to_downlaod)
     job.addFollowOnJobFn(call_impute2, data)
 
-def call_impute2(job, data): 
+def call_impute2(job, input_args): 
     """
     NEED TO BUILD DOCKER AND MAKE A CALL TO IMPUTE2
 
@@ -133,7 +133,7 @@ def call_impute2(job, data):
     job.addFollowOnJobFn(VCF_to_PEDMAP, VCFfile_path, flags)
 
 
-def VCF_to_PEDMAP(job, VCFfilename, min_qual, min_gq, min_gp, output_prefix):
+def VCF_to_PEDMAP(job, input_args):
     """
         Uses PLINK's built-in function to read VCF and write to PED/MAP files. 
          
@@ -154,7 +154,7 @@ def VCF_to_PEDMAP(job, VCFfilename, min_qual, min_gq, min_gp, output_prefix):
             8   sets the family id's to "0" and the within-family id's to the sampleIDs of the VCF file.
             9   sets the name of the output file
         
-        Parameters:
+        Parameters loaded from imput_args dictionary:
                  --param--                  --type--        --description--  
             :param job:                     Job instance
             :param VCFfilename:             string
@@ -210,7 +210,7 @@ def VCF_to_PEDMAP(job, VCFfilename, min_qual, min_gq, min_gp, output_prefix):
     job.addFollowOnJobFn(apply_filters, input_args)
 
 
-def apply_filters(job, MapPed_filename, MAF_cutoff, percent_SNPs_missing_cutoff, genoRate_cutoff, output_prefix): 
+def apply_filters(job, input_args): 
 	"""
 	This module applies MINOR Allele Frequency and missingness filters to the data and outputs a new file. 
 
@@ -277,8 +277,7 @@ def apply_filters(job, MapPed_filename, MAF_cutoff, percent_SNPs_missing_cutoff,
     # Link to the next job in the pipeline
     job.addFollowOnJobFn(IBS_cluster, input_args)
 
-# This function can be done over a cluster 
-def IBS_cluster(job, MapPed_filename, IBS_pairsfile_prefix, num_clusters, clusterfile_prefix):
+def IBS_cluster(job, input_args):
     """
         This module performs 2 primary functions: 
             - Computes the pairwise identity by state for all resulting samples.
@@ -379,7 +378,7 @@ def IBS_cluster(job, MapPed_filename, IBS_pairsfile_prefix, num_clusters, cluste
 
 
 
-def regress(job, MapPed_filename, IBS_clusters_filename, covariates_filename, covariates, phenotypes_filename, phenotype, results_prefix, regression_type):
+def regress(job, input_args):
     """
         Runs an association analysis (linear or logistic regression, based on the reg_type parameter given), regressing the specified phenotypes on genotype including the specified covariates
         and taking into consideration the IBS clusters created in the previous step.

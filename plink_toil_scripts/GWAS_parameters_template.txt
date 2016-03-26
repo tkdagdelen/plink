@@ -12,7 +12,7 @@ Save this file to a different name when finished.
 
 ###################################### Parameters #############################################
 
-VCF to MAP/PED conversion
+VCF to MAP/PED conversion related parameters
 
 	<VCF_filename (string, ex. myVCF.vcf)>: 
 
@@ -24,7 +24,7 @@ VCF to MAP/PED conversion
 
 	<Desired prefix for original PED/MAP files (string, ex. SUPRESS_trial_data)>:
 
-Filtering
+Filtering related parameters
 
 	<Minor Allele Frequency filter MAFcutoff (float, default is )>: 
 
@@ -34,7 +34,7 @@ Filtering
 
 	<Desired prefix for post-filter PED/MAP files (string, ex. SUPRESS_trial_data_filtered)>: 
 
-Clustering
+Clustering related parameters
 
 	<Desired prefix for the file containing non-clustered IBS pairs (*.genome) (string, ex. SUPRESS_trial_data_filtered)>:
 
@@ -42,7 +42,7 @@ Clustering
 
 	<Desired prefix for file containing final IBS clusters (string, ex. SUPRESS_clusters)>:
 
-Association
+Association related parameters
 
 	<Type of analysis to run (linear or logistic) (ex. linear)>:
 
