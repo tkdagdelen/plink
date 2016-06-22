@@ -4,6 +4,8 @@
 # Aknowledgements: 
 #       1) Utility functions copied from John Vivian's batch_align.py script
 
+from os import listdir
+from os.path import isfile, join
 """
 Genome Wide Association Study pipeline with MAF and missingness thresholding, IBS_clustering for stratification correction, association analysis using linear/logistic regression, bonferroni correction, and sorting by P-value. 
 This pipeline is intended for use with PLINK2 (1.9) 
@@ -22,6 +24,14 @@ Dependencies:
 Docker  -   apt-get install docker.io
 Toil    -   pip install toil
 PLINK   -   
+
+Minimum data requirements: 
+    - bed/fam/bim files 
+    - a phenotype file that follows convention found here: http://pngu.mgh.harvard.edu/~purcell/plink/tutorial.shtml
+
+Equivalent plink script: 
+    Given a tped and tfam files with prefix myData, and not using any filters (defaults are used) and using no covariates.
+       >> plink --bfile [input_filename] --maf [mafthresh] --mind [SNPmiss] --geno [genoRate] --out [output_filename_prefix]
 
  """
 ##################### Parser #######################
@@ -56,58 +66,83 @@ PLINK   -
     return parser
 
 ################# Utility functions #####################
+def fetchContainerFiles(filelist):
+    work_dir = os.getcwd()
+    for fname in filelist: 
+        docker_call = 'docker cp plinkContainer:{0} {1}'.format(fname, work_dir)
+        subprocess.check_call(docker_call.split())
+    subprocess.check_call('docker rm plinkContainer'.split())
 
-def docker_call(work_dir, tool_parameters, tool, java_opts=None, outfile=None, sudo=False):
+def docker_call(work_dir, tool_parameters = [], tool = [], outfile=None, sudo=False):
     """
-    Makes subprocess call of a command to a docker container.
+    Makes subprocess call of a command to a docker container, mounting the current local directory instead of a shared directory.
     tool_parameters: list   An array of the parameters to be passed to the tool
-    tool: str               Name of the Docker image to be used (e.g. quay.io/ucsc_cgl/samtools)
-    java_opts: str          Optional commands to pass to a java jar execution. (e.g. '-Xmx15G')
+    tool: str               Name of the Docker image to be used 
     outfile: file           Filehandle that stderr will be passed to
     sudo: bool              If the user wants the docker command executed as sudo
     """
-    base_docker_call = 'docker run --rm --log-driver=none -v {}:/data'.format(work_dir).split()
-    if sudo:
-        base_docker_call = ['sudo'] + base_docker_call
-    if java_opts:
-        base_docker_call = base_docker_call + ['-e', 'JAVA_OPTS={}'.format(java_opts)]
+    # subprocess.check_call('docker-machine env default'.split())
+    # subprocess.check_call('eval',"$(docker-machine env default)")
+    work_dir = os.getcwd()
+    base_docker_call = 'docker run --name plinkContainer -v {0}:/data plink {1}'.format(work_dir,tool).split() + tool_parameters
     try:
-        if outfile:
-            subprocess.check_call(base_docker_call + [tool] + tool_parameters, stdout=outfile)
-        else:
-            subprocess.check_call(base_docker_call + [tool] + tool_parameters)
+        subprocess.check_call(base_docker_call)
     except subprocess.CalledProcessError:
         raise RuntimeError('docker command returned a non-zero exit status. Check error logs.')
     except OSError:
         raise RuntimeError('docker not found on system. Install on all nodes.')
 
-def download_from_url(job, url, fname):
-    """
-    Downloads a file from a URL and places it in the jobStore
-    Input1: Toil job instance
-    Input2: Input arguments
-    Input3: jobstore id dictionary
-    Input4: Name of key used to access url in input_args
-    """
-    work_dir = job.fileStore.getLocalTempDir()
-    file_path = os.path.join(work_dir, fname)
-    if not os.path.exists(file_path):
-        try:
-            subprocess.check_call(['curl', '-fs', '--retry', '5', '--create-dir', url, '-o', file_path])
-        except OSError:
-            raise RuntimeError('Failed to find "curl". Install via "apt-get install curl"')
-    assert os.path.exists(file_path)
-    return job.fileStore.writeGlobalFile(file_path)
+# def docker_call(work_dir, tool_parameters, tool, java_opts=None, outfile=None, sudo=False):
+#     """
+#     Makes subprocess call of a command to a docker container.
+#     tool_parameters: list   An array of the parameters to be passed to the tool
+#     tool: str               Name of the Docker image to be used (e.g. quay.io/ucsc_cgl/samtools)
+#     java_opts: str          Optional commands to pass to a java jar execution. (e.g. '-Xmx15G')
+#     outfile: file           Filehandle that stderr will be passed to
+#     sudo: bool              If the user wants the docker command executed as sudo
+#     """
+#     base_docker_call = 'docker run --rm --log-driver=none -v {}:/data'.format(work_dir).split()
+#     if sudo:
+#         base_docker_call = ['sudo'] + base_docker_call
+#     if java_opts:
+#         base_docker_call = base_docker_call + ['-e', 'JAVA_OPTS={}'.format(java_opts)]
+#     try:
+#         if outfile:
+#             subprocess.check_call(base_docker_call + [tool] + tool_parameters, stdout=outfile)
+#         else:
+#             subprocess.check_call(base_docker_call + [tool] + tool_parameters)
+#     except subprocess.CalledProcessError:
+#         raise RuntimeError('docker command returned a non-zero exit status. Check error logs.')
+#     except OSError:
+#         raise RuntimeError('docker not found on system. Install on all nodes.')
 
-def copy_to_output_dir(work_dir, output_dir, uuid=None, files=()):
-    """
-    A list of files to move from work_dir to output_dir.
-    work_dir: str       Current working directory
-    output_dir: str     Desired output directory
-    files: list         List of files (by filename) to be copied to the desired output directory
-    """
-    for fname in files:
-        shutil.copy(os.path.join(work_dir, fname), os.path.join(output_dir, fname))
+# def download_from_url(job, url, fname):
+#     """
+#     Downloads a file from a URL and places it in the jobStore
+#     Input1: Toil job instance
+#     Input2: Input arguments
+#     Input3: jobstore id dictionary
+#     Input4: Name of key used to access url in input_args
+#     """
+#     work_dir = job.fileStore.getLocalTempDir()
+#     file_path = os.path.join(work_dir, fname)
+#     if not os.path.exists(file_path):
+#         try:
+#             subprocess.check_call(['curl', '-fs', '--retry', '5', '--create-dir', url, '-o', file_path])
+#         except OSError:
+#             raise RuntimeError('Failed to find "curl". Install via "apt-get install curl"')
+#     assert os.path.exists(file_path)
+#     return job.fileStore.writeGlobalFile(file_path)
+
+# def copy_to_output_dir(work_dir, output_dir, uuid=None, files=()):
+#     """
+#     A list of files to move from work_dir to output_dir.
+#     work_dir: str       Current working directory
+#     output_dir: str     Desired output directory
+#     files: list         List of files (by filename) to be copied to the desired output directory
+#     """
+#     for fname in files:
+#         shutil.copy(os.path.join(work_dir, fname), os.path.join(output_dir, fname))
 
 ######################## Jobs ###########################
 
@@ -207,6 +242,7 @@ def VCF_to_PEDMAP(job, input_args):
         raise
 
     # Link to the next job in the pipeline
+    fetchContainerFiles([output_filename + '.ped'])
     job.addFollowOnJobFn(apply_filters, input_args)
 
 
@@ -216,7 +252,7 @@ def apply_filters(job, input_args):
 
     Equivalent PLINK command line arguments:
 
-        >> plink --bfile [input_filename] --maf [mafthresh] --mind [SNPmiss] --geno [genoRate] --out [output_filename]
+        >> plink --bfile [input_filename] --maf [mafthresh] --mind [SNPmiss] --geno [genoRate] --out [output_filename_prefix]
                      0                       1                  2                3                4     
 
     Operations performed (see equiv. command line argument above): 
@@ -258,7 +294,7 @@ def apply_filters(job, input_args):
     work_dir = job.fileStore.getLocalTempDir()
     
     # Put together PLINK arguments
-    PLINK_command = ['--bfile', MapPed_filename,
+    PLINK_command = ['--bfile', MapPed_filename, # going to need to do --make-bed first!
                '--maf', maf_cutoff,
                '--mind', percent_SNPs_missing_cutoff,
                '--geno', genoRate_cutoff,
@@ -275,6 +311,7 @@ def apply_filters(job, input_args):
         raise
 
     # Link to the next job in the pipeline
+    fetchContainerFiles([output_prefix + '.bed',output_prefix + '.fam', output_prefix + '.bim', output_prefix + '.log'])
     job.addFollowOnJobFn(IBS_cluster, input_args)
 
 def IBS_cluster(job, input_args):
@@ -373,10 +410,9 @@ def IBS_cluster(job, input_args):
         # Make docker call to create the .genome file of IBS pairs and make a docker call to cluster them.
 
     # Link to the next job in the pipeline
+    flist = [clusterfiles_prefix + '.cluster{}'.format(i) for i in range(0,3)]
+    fetchContainerFiles(flist)
     job.addFollowOnJobFn(regress, input_args)
-
-
-
 
 def regress(job, input_args):
     """
@@ -471,6 +507,9 @@ def regress(job, input_args):
     except: 
         sys.stderr.write('Running the GWAS pipeline with %s in %s failed.' %(" ".join(PLINK_command), work_dir))
         raise
+    current_directory = os.getcwd()
+    files = [f for f in listdir(current_directory) if isfile(join(current_directory, f))]
+    fetchContainerFiles(files)
 
 def main():
     """
@@ -508,6 +547,7 @@ def main():
 
     # Launch Pipeline
     Job.Runner.startToil(Job.wrapJobFn(start_pipeline, inputs), args)
+
 
 
 

@@ -1,62 +1,98 @@
-############################### GWAS Parameter Template: #######################################
+---------- GWAS Parameter Template: ----------
 
-Input desired parameters to use when running the analysis into the given fields of this template, after the colons. 
-		
-		ex. <parameter>: 2
+Input desired parameters to use when running the analysis after the colons following the @parameter decorators. String parameters given must not inlude spaces (use underscores). Do not change the parameter field names below the @parameter decorators or the parser will fail.
 
-String parameters given must not inlude spaces (underscores can be used instead)
+------ Mandatory Parameters ------
 
-Do not change the parameter field names or the parser will fail
+Input .bed Filename Prefix (ex. Subject_level_filtered)
+@parameter:SUCCESSA_Top_subject_level_filtered
+[bfile]
 
-Save this file to a different name when finished.
+Phenotype Filename (ex. dbGaPPhenoFile.txt)
+@parameter:phs000547.v1.pht003007.v1.p1.c1.GARNET_SUCCESS_Subject_Phenotypes.BCETC.txt
+[pheno]
 
-###################################### Parameters #############################################
+Phenotype to run the analysis against. The name must be exactly as it appears in the column of the phenotype file. (ex. STATUS_DEATH)
+@parameter:STATUS_DEATH
+[pheno_name]
 
-VCF to MAP/PED conversion related parameters
+Type of analysis to run (linear or logistic) (ex. linear)
+@parameter:linear
+[analysis_type]
 
-	<VCF_filename (string, ex. myVCF.vcf)>: 
+Final output filename 
+@parameter:Final_output
+[final_out]
 
-	<Minimum genotype quality threshold (float, default is )>: 
+------ Optional Parameters ------
 
-	<Minimum gp_score threshold (float, default is )>: 
+- Filtering related parameters - 
 
-	<Minimum gq_score threshold (float, default is )>: 
+Do you want to filter input data?. If this parameter isn't yes, input won't be filtered at all. NOTE: IF YES, THE NEXT PARAMETER IS REQUIRED (ex. yes)
+@parameter:
+[filter]
 
-	<Desired prefix for original PED/MAP files (string, ex. SUPRESS_trial_data)>:
+Desired prefix for filtered PED/MAP files. You need to provide this parameter if you use any filters. (ex. trial_data_filtered)
+@parameter:
+[filtered_out]
 
-Filtering related parameters
+Compute filtered file even if there already exists one with the same name? yes or no. This is required. (ex. yes)
+@parameter:
+[override_filterfiles]
 
-	<Minor Allele Frequency filter MAFcutoff (float, default is )>: 
+Minor Allele Frequency filter MAFcutoff. If not specified, default is 0.01 (ex. .01)
+@parameter:
+[maf]
 
-	<Cutoff for percentage of samples missing for a given SNP (float, default is )>:
+Cutoff for percentage of samples missing for a given SNP. If not specified, default is 1 which doesn't filter any. (ex. 0.1)
+@parameter:
+[mind]
 
-	<Cutoff for percentage of SNPs missing for a given sample (float, default is )>:
+Cutoff for percentage of SNPs missing for a given sample. If not specified, default is 1 which doesn't filter any. (ex. 0.1)
+@parameter:
+[geno]
 
-	<Desired prefix for post-filter PED/MAP files (string, ex. SUPRESS_trial_data_filtered)>: 
+- Clustering related parameters -
 
-Clustering related parameters
+Do you want to cluster the data? If not yes, no clustering will be done. (ex. yes)
+@parameter:yes
+[cluster]
 
-	<Desired prefix for the file containing non-clustered IBS pairs (*.genome) (string, ex. SUPRESS_trial_data_filtered)>:
+number of clusters. This parameter is required if you want clustering done. (ex. 3)
+@parameter:3
+[num_clusters]
 
-	<Number of clusters to sort IBS pairs into (float, ex. 3)>:
+Compute cluster files even if there already exists ones with the same name? yes or no. (ex. yes)
+@parameter:no
+[override_clusterfiles]
 
-	<Desired prefix for file containing final IBS clusters (string, ex. SUPRESS_clusters)>:
+Desired prefix for the .genome intermediary file containing non-clustered pairs. If not specified, the prefix will be the same as the .bed file. (ex. pairs)
+@parameter:PairFilez
+[pairs_filename]
 
-Association related parameters
+Desired prefix for final .cluster files. If not specified, the prefix will be the same as the .bed (ex. GenoClusters)
+@parameter:ClusterFilez
+[clusterfiles_prefix]
 
-	<Type of analysis to run (linear or logistic) (ex. linear)>:
+- Regression related parameters -
 
-	<Name of covariate file (string, ex. covar.txt)>: 
+Do you want to include covariates? If not yes, no covariates will be inluced. (ex. yes)
+@parameter: yes
+[covar]
 
-	<Comma separated list of covariates to include from covariate file (string, ex. BMI,AGE,Treatment_Arm)>:
+File containing covariates. This parameter is required if you want covariates included. (ex. phenoFile.txt)
+@parameter: phs000547.v1.pht003007.v1.p1.c1.GARNET_SUCCESS_Subject_Phenotypes.BCETC.txt
+[covar_file]
 
-	<Name of phenotype file contianing phenotype(s) to regress on (string, ex. pheno.txt)>
+Comma separated list of covariates to include from covariate file. You must specify at least one of these if a covariate file is specified, and the names must be EXACTLY as they appear in the file, caps and all. (ex. BMI,AGE,Treatment_Arm)
+@parameter: Age,randomization1
+[covar_name]
 
-	<Name of phenotype variable from phenotype file to regress (string, ex. 10yr_survival)>:
+- Results Adjustment Parameters -
 
-	<Desired prefix for final association .assoc.linear/logistic and .adjust output files (string, ex. SUPRESS_results)>: 
-
-
+# Do you want to adjust the results using bonferroni correction, etc? If not yes, then the only results displayed will be the p-value. (ex. yes)
+# @parameter: 
+# [adjust]
 	
 
 

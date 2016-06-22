@@ -3,23 +3,24 @@ FROM ubuntu:14.04.2
 MAINTAINER Taner Dagdelen <tkdagdelen@berkeley.edu>
 
 # setting the environment vars 
-ENV PLINK_VERSION	1.07 
-ENV PLINK_HOME		/usr/local/plink
-ENV PATH 			$PLINK_HOME:$PATH
+ENV PLINK_VERSION	1.9
+ENV PLINK2_HOME		/usr/local/plink2
+ENV PATH 			$PLINK2_HOME:$PATH
 
 # Retrieving, unzipping and linking the source to PLINK_HOME
 RUN apt-get install -y unzip wget && \
-	wget https://www.cog-genomics.org/static/bin/plink160203/plink_linux_x86_64.zip && \
-	unzip plink_linux_x86_64.zip -d /usr/local/ && \
+	mkdir /usr/local/plink2 && \
+	wget http://www.cog-genomics.org/static/bin/plink160607/plink_linux_x86_64.zip && \
+	unzip plink_linux_x86_64.zip -d /usr/local/plink2 && \
 	rm plink_linux_x86_64.zip && \ 
-	cd /usr/local && \ 
-	ln -s plink_linux_x86_64 $PLINK_HOME
+	cd /usr/local/plink2 && \ 
+	ln -s plink_linux_x86_64 $PLINK2_HOME
 
 # Workaround to modify permisions on /usr/local/bin and start plink with the --noweb option. 
 RUN sudo chown -R $(whoami) /usr/local/bin && \				   
 	echo '#!/bin/bash'                                                 > /usr/local/bin/plink && \
     echo '#Launch the real plink script forcing the --noweb argument' >> /usr/local/bin/plink && \
-    echo '/usr/local/plink/plink --noweb "$@"'                        >> /usr/local/bin/plink && \
+    echo '/usr/local/plink2/plink "$@"'                        >> /usr/local/bin/plink && \
     chmod a+x /usr/local/bin/plink
 
 # Set the default action to print plink's options 
