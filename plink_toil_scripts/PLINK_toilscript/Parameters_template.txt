@@ -1,0 +1,99 @@
+---------- GWAS Parameter Template: ----------
+
+Input desired parameters to use when running the analysis after the colons following the @parameter decorators. String parameters given must not inlude spaces (use underscores). Do not change the parameter field names below the @parameter decorators or the parser will fail.
+
+------ Mandatory Parameters ------
+
+Input .bed Filename Prefix (ex. Subject_level_filtered)
+@parameter:
+[bfile]
+
+Phenotype Filename (ex. dbGaPPhenoFile.txt)
+@parameter:
+[pheno]
+
+Phenotype to run the analysis against. The name must be exactly as it appears in the column of the phenotype file. (ex. STATUS_DEATH)
+@parameter:
+[pheno_name]
+
+Type of analysis to run (linear or logistic) (ex. linear)
+@parameter:
+[analysis_type]
+
+Final output filename 
+@parameter:
+[final_out]
+
+------ Optional Parameters ------
+
+- Filtering related parameters - 
+
+Do you want to filter input data?. If this parameter isn't yes, input won't be filtered at all. NOTE: IF YES, THE NEXT PARAMETER IS REQUIRED (ex. yes)
+@parameter:
+[filter]
+
+Desired prefix for filtered PED/MAP files. You need to provide this parameter if you use any filters. (ex. trial_data_filtered)
+@parameter:
+[filtered_out]
+
+Compute filtered file even if there already exists one with the same name? yes or no. This is required. (ex. yes)
+@parameter:
+[override_filterfiles]
+
+Minor Allele Frequency filter MAFcutoff. If not specified, default is 0.01 (ex. .01)
+@parameter:
+[maf]
+
+Cutoff for percentage of SNPs missing for a given sample. If not specified, default is .1 which filter out samples that are missing values for greater than 10% of the SNPs. (ex. 0.1)
+@parameter:
+[mind]
+
+Cutoff for percentage of samples missing their value for a given SNP. If not specified, default is 1 which doesn't filter out any SNPs. (ex. 0.1)
+@parameter:
+[geno]
+
+- Clustering related samples -
+
+Do you want to cluster the data? If not yes, no clustering will be done. (ex. yes)
+@parameter:
+[cluster]
+
+number of clusters. This parameter is required if you want clustering done. (ex. 3)
+@parameter:
+[num_clusters]
+
+Compute cluster files even if there already exists ones with the same name? yes or no. (ex. yes)
+@parameter:
+[override_clusterfiles]
+
+Desired prefix for the .genome intermediary file containing non-clustered pairs. If not specified, the prefix will be the same as the .bed file. (ex. pairs)
+@parameter:
+[pairs_filename]
+
+Desired prefix for final .cluster files. If not specified, the prefix will be the same as the .bed (ex. GenoClusters)
+@parameter:
+[clusterfiles_prefix]
+
+- Regression related parameters -
+
+Do you want to include covariates? If not yes, no covariates will be inluced. (ex. yes)
+@parameter:
+[covar]
+
+File containing covariates. This parameter is required if you want covariates included. (ex. phenoFile.txt)
+@parameter:
+[covar_file]
+
+Comma separated list of covariates to include from covariate file. You must specify at least one of these if a covariate file is specified, and the names must be EXACTLY as they appear in the file, caps and all. (ex. BMI,AGE,Treatment_Arm)
+@parameter:
+[covar_name]
+
+- Results Adjustment Parameters -
+
+# Do you want to adjust the results using bonferroni correction, etc? If not yes, then the only results displayed will be the p-value. (ex. yes)
+# @parameter: 
+# [adjust]
+	
+
+
+
