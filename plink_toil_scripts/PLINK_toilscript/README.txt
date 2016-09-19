@@ -12,7 +12,7 @@ To run the script on dbGaP data, follow the following procedure:
 
 	1) Ensure that the relevant dbGaP data is decrypted and in the current directory. Also ensure that the PLINK_toilscript.py and the relevant parameters file are in the current directory. 
 	2) Open the parameters file, input the necessary information for all the mandatory parameters and whatever other relevant parameters, and save. 
-	3) run the script using the online command: 
+	3) run the script using the command: 
 
 		>> python PLINK_toilscript.py -f myParameterfile.txt ./new
 
