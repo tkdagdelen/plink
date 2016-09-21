@@ -16,7 +16,6 @@ from os import remove, close
 import csv
 import sys
 import urllib
-import pygame
 
 """
 Genome Wide Association Study pipeline with MAF and missingness thresholding, IBS_clustering for stratification correction, association analysis using linear/logistic regression, bonferroni correction, and sorting by P-value, using PLINK. 
@@ -47,12 +46,9 @@ Minimum data requirements:
 ################# Utility functions #####################
 
 def build_parser():
-	"""
-	Builds the parser to specify the parameter file
-	"""
-    parser = argparse.ArgumentParser(description="main.__doc__", add_help=True)
-    parser.add_argument('-f', '--file', required=True, default = 'Run3_parameters.txt', help='Parameter file. See README')
-    return parser
+	parser = argparse.ArgumentParser(description="main.__doc__", add_help=True)
+	parser.add_argument('-f', '--file', required=True, default = 'Run3_parameters.txt', help='Parameter file. See README')
+	return parser
 
 def fixPhenoFile(filename): 
 	"""
