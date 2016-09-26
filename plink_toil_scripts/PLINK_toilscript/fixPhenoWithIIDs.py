@@ -10,12 +10,13 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 		with open(phenofilename) as phenos_toread:
 			with open(output_file, "wb") as tmp_file:
 				csv.field_size_limit(sys.maxsize)
-				idreader = csv.reader(ids_toread, delimiter = "\t")
+				idreader = csv.reader(ids_toread, delimiter = " ")
 				phenoreader = csv.reader(phenos_toread, delimiter = "\t")
 				writer = csv.writer(tmp_file, delimiter = " ")
 				isfirst = True
 				idDict = {}
 				for idrow in idreader:     # read one row at a time
+					idrow.remove(' ')
 					print(idrow)
 					print(len(idrow))
 					if (len(idrow) >= 2) and (not idrow[0].startswith('#')):
