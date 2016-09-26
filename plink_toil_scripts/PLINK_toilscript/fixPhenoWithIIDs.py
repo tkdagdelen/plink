@@ -4,9 +4,9 @@ from os import remove, close
 import csv
 import sys
 
-def getIIDsAndWrite(recodeADfilename, phenofilename):
+def getIIDsAndWrite(imissFilename, phenofilename):
 	fh, output_file = mkstemp()
-	with open(recodeADfilename) as ids_toread:
+	with open(imissFilename) as ids_toread:
 		with open(phenofilename) as phenos_toread:
 			with open(output_file, "wb") as tmp_file:
 				csv.field_size_limit(sys.maxsize)
@@ -38,5 +38,5 @@ def getIIDsAndWrite(recodeADfilename, phenofilename):
 	move(output_file,"fixed_with_iids_"+filename)
 
 phenofilename = input("Pheno filename:")
-recodeADfilename = input("RecodeAD filename:")
-getIIDsAndWrite(recodeADfilename, phenofilename)
+imissFilename = input("imiss filename:")
+getIIDsAndWrite(imissFilename, phenofilename)
