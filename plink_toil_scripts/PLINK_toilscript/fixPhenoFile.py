@@ -18,7 +18,7 @@ def fixPhenoFile(filename):
                                         if not row[0].startswith('#'):#'dbGaP SubjID':
                                                 isTrue = True
                                 if isTrue and not isfirst:
-                                        myColumn = [row[1], row[1]] + list(row[i] for i in range(2,len(row)))
+                                        myColumn = [row[0], row[0]] + list(row[i] for i in range(2,len(row)))
                                         writer.writerow(myColumn) # write it
                                 if isfirst and isTrue:
                                         myColumn = ['FID', 'IID'] + list(row[i].replace(" ","") for i in range(2,len(row)))
