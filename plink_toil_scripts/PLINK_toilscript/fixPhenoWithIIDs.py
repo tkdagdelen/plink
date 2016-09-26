@@ -12,7 +12,7 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 				csv.field_size_limit(sys.maxsize)
 				idreader = csv.reader(ids_toread, delimiter = " ")
 				phenoreader = csv.reader(phenos_toread, delimiter = "\t")
-				writer = csv.writer(tmp_file, delimiter = " ")
+				writer = csv.writer(tmp_file, delimiter = "\t")
 				isfirst = True
 				idDict = {}
 				for idrow in idreader:     # read one row at a time
