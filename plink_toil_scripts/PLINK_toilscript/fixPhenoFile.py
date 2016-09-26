@@ -2,7 +2,7 @@ from tempfile import mkstemp
 from shutil import move
 from os import remove, close
 import csv
-
+                                	
 
 """ Takes the phenotype file given by dbGaP and changes all of the garnet accession numbers to 1"""
 def fixPhenoFile(filename):
