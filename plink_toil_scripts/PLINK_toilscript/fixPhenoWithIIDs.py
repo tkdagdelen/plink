@@ -12,7 +12,7 @@ def getIIDsAndWrite(recodeADfilename, phenofilename):
 				phenoreader = csv.reader(phenos_read, delimiter = "\t")
 				writer = csv.writer(tmp_file, delimiter = " ")
 				isfirst = True
-				idDict = set{}
+				idDict = {}
 				for idrow in idreader:     # read one row at a time
 					if (len(idrow) >= 2) and (not idrow[0].startswith('#')):
 						if isFirst: 
