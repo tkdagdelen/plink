@@ -37,7 +37,7 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 								do=None
 							writer.writerow(myColumn) # write it
 	close(fh)
-	move(output_file,"fixed_with_iids_"+filename)
+	move(output_file,"fixed_with_iids_"+phenofilename)
 
 phenofilename = input("Pheno filename:")
 imissFilename = input("imiss filename:")
