@@ -2,12 +2,14 @@ from tempfile import mkstemp
 from shutil import move
 from os import remove, close
 import csv
+import sys
 
 def getIIDsAndWrite(recodeADfilename, phenofilename):
 	fh, output_file = mkstemp()
 	with open(recodeADfilename) as ids_toread:
 		with open(phenofilename) as phenos_toread:
 			with open(output_file, "wb") as tmp_file:
+				csv.field_size_limit(sys.maxsize)
 				idreader = csv.reader(ids_toread, delimiter = "\t")
 				phenoreader = csv.reader(phenos_toread, delimiter = "\t")
 				writer = csv.writer(tmp_file, delimiter = " ")
