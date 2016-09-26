@@ -30,7 +30,10 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 							writer.writerow(myColumn)
 							isfirst = False
 						else:
-							myColumn = [phenorow[1], idDict[phenorow[1]]]  + list(phenorow[i] for i in range(2,len(phenorow)))
+							try: 
+								myColumn = [phenorow[1], idDict[phenorow[1]]]  + list(phenorow[i] for i in range(2,len(phenorow)))
+							except KeyError: 
+								# do nothing
 							writer.writerow(myColumn) # write it
 	close(fh)
 	move(output_file,"fixed_with_iids_"+filename)
