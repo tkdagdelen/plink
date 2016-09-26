@@ -9,7 +9,7 @@ def getIIDsAndWrite(recodeADfilename, phenofilename):
 		with open(phenofilename) as phenos_toread:
 			with open(output_file, "wb") as tmp_file:
 				idreader = csv.reader(ids_toread, delimiter = "\t")
-				phenoreader = csv.reader(phenos_read, delimiter = "\t")
+				phenoreader = csv.reader(phenos_toread, delimiter = "\t")
 				writer = csv.writer(tmp_file, delimiter = " ")
 				isfirst = True
 				idDict = {}
