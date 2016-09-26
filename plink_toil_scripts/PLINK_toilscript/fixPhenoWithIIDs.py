@@ -6,10 +6,10 @@ import csv
 def getIIDsAndWrite(recodeADfilename, phenofilename):
 	fh, output_file = mkstemp()
 	with open(recodeADfilename) as ids_toread:
-        with open(phenofilename) as phenos_toread:
-            with open(output_file, "wb") as tmp_file:
-                idreader = csv.reader(ids_toread, delimiter = "\t")
-                phenoreader = csv.reader(phenos_read, delimiter = "\t")
+    	with open(phenofilename) as phenos_toread:
+        	with open(output_file, "wb") as tmp_file:
+            	idreader = csv.reader(ids_toread, delimiter = "\t")
+           		phenoreader = csv.reader(phenos_read, delimiter = "\t")
                 writer = csv.writer(tmp_file, delimiter = " ")
                 isfirst = True
                 idDict = dict{}
