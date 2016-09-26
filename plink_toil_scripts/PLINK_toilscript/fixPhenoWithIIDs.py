@@ -17,13 +17,13 @@ def getIIDsAndWrite(recodeADfilename, phenofilename):
 				idDict = {}
 				for idrow in idreader:     # read one row at a time
 					if (len(idrow) >= 2) and (not idrow[0].startswith('#')):
-						if isFirst: 
-							isFirst = False
+						if isfirst: 
+							isfirst = False
 						else:
 							idDict[idrow[0]]=idrow[1]
 				for phenorow in phenoreader:
 					if (len(phenorow) >= 2) and (not phenorow[0].startswith('#')):
-						if isFirst: 
+						if isfirst: 
 							myColumn = ['FID', 'IID'] + list(phenorow[i].replace(" ","") for i in range(2,len(phenorow)))
 							writer.writerow(myColumn)
 							isfirst = False
