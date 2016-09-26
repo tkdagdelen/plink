@@ -21,6 +21,7 @@ def getIIDsAndWrite(recodeADfilename, phenofilename):
 							isfirst = False
 						else:
 							idDict[idrow[0]]=idrow[1]
+				print(idDict)
 				isfirst = True
 				for phenorow in phenoreader:
 					if (len(phenorow) >= 2) and (not phenorow[0].startswith('#')):
