@@ -18,7 +18,7 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 				for idrow in idreader:     # read one row at a time
 					print(idrow)
 					print(len(idrow))
-					idrow.remove(" ")
+					idrow.remove("")
 					if (len(idrow) >= 2) and (not idrow[0].startswith('#')):
 						if isfirst: 
 							isfirst = False
