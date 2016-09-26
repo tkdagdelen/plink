@@ -17,14 +17,11 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 				idDict = {}
 				for idrow in idreader:     # read one row at a time
 					idrow = filter(None,idrow)
-					print(idrow)
-					print(len(idrow))
 					if (len(idrow) >= 2) and (not idrow[0].startswith('#')):
 						if isfirst: 
 							isfirst = False
 						else:
 							idDict[idrow[0]]=idrow[1]
-				print(idDict)
 				isfirst = True
 				for phenorow in phenoreader:
 					if (len(phenorow) >= 2) and (not phenorow[0].startswith('#')):
@@ -33,7 +30,7 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 							writer.writerow(myColumn)
 							isfirst = False
 						else:
-							myColumn = [phenorow[1], idDict[phenorow[1]]]  + list(phenorow[i] for i in range(2,len(row)))
+							myColumn = [phenorow[1], idDict[phenorow[1]]]  + list(phenorow[i] for i in range(2,len(phenorow)))
 							writer.writerow(myColumn) # write it
 	close(fh)
 	move(output_file,"fixed_with_iids_"+filename)
