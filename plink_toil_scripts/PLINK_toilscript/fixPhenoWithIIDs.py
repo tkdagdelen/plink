@@ -34,7 +34,7 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 							 	genderStatus = [0]
 							 	if (phenorow[5]=="M"): 
 							 		genderStatus = [1]
-							 	for p in range =(0, len(phenorow)): 
+							 	for p in range(0, len(phenorow)): 
 							 		if phenorow[j]=="Yes":
 							 			phenorow[j] = 1
 							 		if phenorow[j] == "No": 
