@@ -32,8 +32,8 @@ def getIIDsAndWrite(imissFilename, phenofilename):
 						else:
 							try:
 							 	genderStatus = [0]
-							 	if (phenoRow[5]=="M"): 
-							 		gender = [1]
+							 	if (phenorow[5]=="M"): 
+							 		genderStatus = [1]
 								myColumn = [phenorow[1], idDict[phenorow[1]]]  + list(phenorow[i] for i in range(2,4)) + genderStatus + list(phenorow[j] for j in range(6,len(phenorow)))
 							except KeyError: 
 								# do nothing
